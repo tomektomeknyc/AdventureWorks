@@ -50,9 +50,9 @@ for region in df_3d["Region"].unique():
 # Layout and camera
 fig.update_layout(
     title=dict(
-        text="3D Sales Volume: Product vs Region<br><sub>Files used in merge: Sales Data 2021 & 2022, Product Lookup, Territory Lookup, Customer Lookup</sub>",
+        text="3D Sales Volume: Product vs Region<br><sub>Files used in merge: ...</sub>",
         x=0.5,
-        xanchor="center"
+        xanchor='center'
     ),
     scene=dict(
         xaxis=dict(
@@ -69,16 +69,13 @@ fig.update_layout(
         zaxis=dict(
             title="Order Quantity",
             tickfont=dict(size=10)
-        ),
-        camera=dict(
-            eye=dict(x=2, y=2, z=1)
         )
     ),
-    legend=dict(
-        title="Region",
-        itemsizing='constant'
+    scene_camera=dict(
+        eye=dict(x=2, y=2, z=1)
     )
 )
+
 
 # Export to HTML
 fig.write_html("3d_sales_volume_product_region.html")
