@@ -2,6 +2,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 import io
+import plotly.express as px
+
 
 st.set_page_config(layout="wide")  # make canvas bigger
 st.title("📊 3D Sales Volume: Product vs Region")
