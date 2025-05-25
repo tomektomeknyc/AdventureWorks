@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import io
 
 st.set_page_config(layout="wide")  # make canvas bigger
 st.title("📊 3D Sales Volume: Product vs Region")
@@ -82,7 +83,16 @@ fig.update_layout(
 # Show in Streamlit
 st.plotly_chart(fig, use_container_width=True)
 
-# Optional: Save HTML
-if st.button("📥 Download 3D Chart as HTML"):
-    fig.write_html("3d_sales_volume_product_region.html")
-    st.success("Chart saved as HTML.")
+# Save HTML
+
+
+html_buffer = io.StringIO()
+fig.write_html(html_buffer)
+html_bytes = html_buffer.getvalue().encode()
+
+st.download_button(
+    label="📥 Download 3D Chart as HTML",
+    data=html_bytes,
+    file_name="3d_sales_volume_product_region.html",
+    mime="text/html"
+)
