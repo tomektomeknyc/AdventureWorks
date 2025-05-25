@@ -54,26 +54,26 @@ fig.update_layout(
         x=0.5,
         xanchor='center'
     ),
-    scene=dict(
-        xaxis=dict(
-            title="Product",
-            titlefont=dict(size=14),
-            tickangle=30,
-            tickfont=dict(size=10)
-        ),
-        yaxis=dict(
-            title="Region",
-            tickangle=30,
-            tickfont=dict(size=10)
-        ),
-        zaxis=dict(
-            title="Order Quantity",
-            tickfont=dict(size=10)
-        )
+   scene=dict(
+    xaxis=dict(
+        title=dict(text="Product"),
+        tickangle=30,
+        tickfont=dict(size=10)
     ),
-    scene_camera=dict(
+    yaxis=dict(
+        title=dict(text="Region"),
+        tickangle=30,
+        tickfont=dict(size=10)
+    ),
+    zaxis=dict(
+        title=dict(text="Order Quantity"),
+        tickfont=dict(size=10)
+    ),
+    camera=dict(
         eye=dict(x=2, y=2, z=1)
     )
+)
+
 )
 
 
