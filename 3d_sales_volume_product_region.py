@@ -1,81 +1,71 @@
 import pandas as pd
 import plotly.graph_objects as go
+import streamlit as st
 
-# Load datasets
-sales_2021 = pd.read_csv("files/sales_2021.csv")
-sales_2022 = pd.read_csv("files/sales_2022.csv")
-products = pd.read_csv("files/AdventureWorks Product Lookup.csv")
-territories = pd.read_csv("files/AdventureWorks Territory Lookup.csv")
-customers = pd.read_csv("files/AdventureWorks Customer Lookup.csv", encoding="ISO-8859-1")
+st.title("📊 AdventureWorks 3D Sales Volume Visualization")
 
-# Combine sales
-sales = pd.concat([sales_2021, sales_2022], ignore_index=True)
+if st.button("Generate 3D Sales Chart"):
 
-# Clean and standardize
-territories.rename(columns={"SalesTerritoryKey": "TerritoryKey"}, inplace=True)
-customers.rename(columns={"CustomerID": "CustomerKey"}, inplace=True)
-customers = customers.dropna(subset=["CustomerKey"])
-customers = customers[customers["CustomerKey"].astype(str).str.match(r"^\d+$")]
-customers["CustomerKey"] = customers["CustomerKey"].astype(int)
+    # Load CSVs
+    sales_2021 = pd.read_csv("files/sales_2021.csv")
+    sales_2022 = pd.read_csv("files/sales_2022.csv")
+    sales = pd.concat([sales_2021, sales_2022], ignore_index=True)
 
-# Merge everything
-merged = sales.merge(customers, on="CustomerKey", how="left") \
-              .merge(territories, on="TerritoryKey", how="left") \
-              .merge(products, on="ProductKey", how="left")
+    products = pd.read_csv("files/AdventureWorks Product Lookup.csv")
+    territories = pd.read_csv("files/AdventureWorks Territory Lookup.csv")
+    customers = pd.read_csv("files/AdventureWorks Customer Lookup.csv", encoding="ISO-8859-1")
 
-# Aggregate order quantity
-df_3d = merged.groupby(["ProductName", "Region"]).agg({
-    "OrderQuantity": "sum"
-}).reset_index()
+    # Clean and join
+    territories.rename(columns={"SalesTerritoryKey": "TerritoryKey"}, inplace=True)
+    customers.rename(columns={"CustomerID": "CustomerKey"}, inplace=True)
+    customers = customers.dropna(subset=["CustomerKey"])
+    customers = customers[customers["CustomerKey"].astype(str).str.match(r"^\d+$")]
+    customers["CustomerKey"] = customers["CustomerKey"].astype(int)
 
-# Create 3D scatter plot (1 trace per region)
-fig = go.Figure()
+    merged = sales.merge(customers, on="CustomerKey", how="left") \
+                  .merge(territories, on="TerritoryKey", how="left") \
+                  .merge(products, on="ProductKey", how="left")
 
-for region in df_3d["Region"].unique():
-    region_data = df_3d[df_3d["Region"] == region]
+    df_3d = merged.groupby(["ProductName", "Region"]).agg({"OrderQuantity": "sum"}).reset_index()
 
-    fig.add_trace(go.Scatter3d(
-        x=region_data["ProductName"],
-        y=[region] * len(region_data),
-        z=region_data["OrderQuantity"],
+    # Plot
+    fig = go.Figure(data=[go.Scatter3d(
+        x=df_3d["ProductName"],
+        y=df_3d["Region"],
+        z=df_3d["OrderQuantity"],
         mode="markers",
-        name=region,
         marker=dict(
-            size=region_data["OrderQuantity"] / 50,  # scale size by volume
+            size=2,
+            color=df_3d["Region"].astype("category").cat.codes,
+            colorscale="Rainbow",
             opacity=0.8
         ),
-        text=region_data["ProductName"] + " / " + region
-    ))
+        text=df_3d["ProductName"] + " / " + df_3d["Region"]
+    )])
 
-# Layout and camera
-fig.update_layout(
-    title=dict(
-        text="3D Sales Volume: Product vs Region<br><sub>Files used in merge: ...</sub>",
-        x=0.5,
-        xanchor='center'
-    ),
-   scene=dict(
-    xaxis=dict(
-        title=dict(text="Product"),
-        tickangle=30,
-        tickfont=dict(size=10)
-    ),
-    yaxis=dict(
-        title=dict(text="Region"),
-        tickangle=30,
-        tickfont=dict(size=10)
-    ),
-    zaxis=dict(
-        title=dict(text="Order Quantity"),
-        tickfont=dict(size=10)
-    ),
-    camera=dict(
-        eye=dict(x=2, y=2, z=1)
+    fig.update_layout(
+        title=dict(
+            text="3D Sales Volume: Product vs Region<br><sub>Files used: Sales, Territories, Customers, Products</sub>",
+            x=0.5,
+            xanchor="center"
+        ),
+        scene=dict(
+            xaxis=dict(title=dict(text="Product"), tickangle=30, tickfont=dict(size=10)),
+            yaxis=dict(title=dict(text="Region"), tickangle=30, tickfont=dict(size=10)),
+            zaxis=dict(title=dict(text="Order Quantity"), tickfont=dict(size=10)),
+            camera=dict(eye=dict(x=2, y=2, z=1))
+        )
     )
-)
 
-)
+    # Show chart inline in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
 
-
-# Export to HTML
-fig.write_html("3d_sales_volume_product_region.html")
+    # Save HTML and offer download
+    fig.write_html("3d_sales_volume_product_region.html")
+    with open("3d_sales_volume_product_region.html", "rb") as f:
+        st.download_button(
+            label="📥 Download HTML",
+            data=f,
+            file_name="3d_sales_volume_product_region.html",
+            mime="text/html"
+        )
